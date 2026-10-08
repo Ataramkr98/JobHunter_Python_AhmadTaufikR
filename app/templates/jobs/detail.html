@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_badge with context %}
+{% block title %}{{ job.title }} — {{ job.company.name }}{% endblock %}
+{% block content %}
+<div class="page-container">
+  <div class="detail-layout">
+    <article class="panel detail-main">
+      <a href="{{ url_for('jobs.search') }}" class="back-link">{{ icon('arrow-left', 'icon-sm') }}Back to search</a>
+      <div class="flex items-start gap-4">
+        <div class="company-mark company-mark-large">{{ icon('building-2', 'icon-lg') }}</div>
+        <div class="min-w-0 flex-1">
+          <h1 class="detail-title">{{ job.title }}</h1>
+          <div class="detail-company"><a href="{{ url_for('jobs.company', slug=job.company.slug) }}">{{ job.company.name }}</a><span aria-hidden="true">·</span><span>{{ job.location_display }}</span><span aria-hidden="true">·</span><span>{{ job.employment_type_display }}</span></div>
+        </div>
+      </div>
+
+      <div class="detail-meta-grid">
+        <div class="detail-meta-item">{{ icon('banknote') }}<span>Salary<strong>{{ job.salary_display }}</strong></span></div>
+        <div class="detail-meta-item">{{ icon('layers') }}<span>Category<strong>{{ job.category }}</strong></span></div>
+        <div class="detail-meta-item">{{ icon('chart-bar') }}<span>Seniority<strong>{{ job.seniority|title }}</strong></span></div>
+        <div class="detail-meta-item">{{ icon('wifi') }}<span>Work style<strong>{{ 'Remote' if job.is_remote else 'On-site' }}</strong></span></div>
+      </div>
+
+      {% if job.skills %}<section class="content-section"><h2>Skills you will use</h2><div class="skill-list">{% for s in job.skills %}<span class="skill-chip">{{ s }}</span>{% endfor %}</div></section>{% endif %}
+      <section class="content-section"><h2>Description</h2><div class="content-copy whitespace-pre-line">{{ job.description }}</div></section>
+      {# `apply_links` is deduplicated to one entry per source in the view, so a listing
+           scraped twice from the same board cannot render two identical buttons. #}
+      <section class="content-section"><h2>Found on</h2><div class="source-links">
+        {% for js in apply_links %}<a href="{{ js.url }}" target="_blank" rel="noopener" class="source-link">{{ icon('external-link', 'icon-sm') }}Apply on {{ js.source.name }}</a>{% else %}{% if posted_job %}<span class="text-small text-muted">Posted directly on JobHunter.</span>{% endif %}{% endfor %}
+      </div></section>
+    </article>
+
+    <aside class="detail-sidebar">
+      <div class="panel action-panel stack-sm">
+        {% if current_user.is_authenticated %}
+          <form method="post" action="{{ url_for('jobs.save', job_id=job.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn {% if saved %}btn-secondary is-selected{% else %}btn-primary{% endif %} btn-block" type="submit">{{ icon('bookmark', 'icon-sm') }}{{ 'Saved' if saved else 'Save job' }}</button></form>
+        {% else %}<a href="{{ url_for('accounts.login', next=request.full_path) }}" class="btn btn-primary btn-block">{{ icon('bookmark', 'icon-sm') }}Log in to save</a>{% endif %}
+        {% if posted_job %}
+          {% if current_user.is_authenticated and posted_job.employer.user_id == current_user.id %}
+            <a href="{{ url_for('employer.applicants', pj_id=posted_job.id) }}" class="btn btn-secondary btn-block">{{ icon('users', 'icon-sm') }}View applicants</a>
+          {% elif current_user.is_authenticated %}
+            <form method="post" action="{{ url_for('employer.apply', pj_id=posted_job.id) }}" class="stack-sm">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% if not submitted %}<textarea name="cover_note" rows="3" placeholder="Optional cover note" class="textarea"></textarea>{% endif %}<button class="btn btn-secondary btn-block" type="submit" {% if submitted %}disabled{% endif %}>{{ icon('send', 'icon-sm') }}{{ 'Application submitted' if submitted else 'Apply to employer' }}</button>
+            </form>
+          {% else %}<a href="{{ url_for('accounts.login', next=request.full_path) }}" class="btn btn-secondary btn-block">{{ icon('send', 'icon-sm') }}Log in to apply</a>{% endif %}
+        {% else %}
+          {% if current_user.is_authenticated %}<form method="post" action="{{ url_for('jobs.track', job_id=job.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-secondary btn-block" type="submit" {% if applied %}disabled{% endif %}>{{ icon('clipboard-check', 'icon-sm') }}{{ 'Tracking' if applied else 'Track application' }}</button></form>
+          {% else %}<a href="{{ url_for('accounts.login', next=request.full_path) }}" class="btn btn-secondary btn-block">{{ icon('clipboard-check', 'icon-sm') }}Log in to track</a>{% endif %}
+        {% endif %}
+      </div>
+
+      {% if fit %}<div class="panel score-block"><div class="panel-heading mb-0"><div><h3>AI fit for your resume</h3><p>Based on your skills and experience.</p></div>{{ icon('sparkles', 'icon-sm text-primary') }}</div><div class="score-value">{{ fit.score }}%</div><div class="score-meter" role="progressbar" aria-label="Resume fit for this role" aria-valuenow="{{ fit.score|round(0, 'floor')|int }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ fit.score }}%"></span></div>{% if fit.matched_skills %}<p class="field-help">Matches: {% for s in fit.matched_skills %}<strong class="text-primary">{{ s }}</strong>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}<a href="{{ url_for('resume.matches') }}" class="section-link mt-3">See all matches {{ icon('arrow-up-right', 'icon-sm') }}</a></div>{% endif %}
+
+      {% if similar %}<div class="panel panel-pad"><div class="panel-heading"><div><h3>Similar jobs</h3><p>More roles worth a look.</p></div></div><div class="sidebar-list">{% for j in similar %}<a href="{{ url_for('jobs.detail', job_id=j.id) }}">{{ j.title }} · {{ j.company.name }}</a>{% endfor %}</div></div>{% endif %}
+    </aside>
+  </div>
+</div>
+{% endblock %}

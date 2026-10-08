@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, job_card, empty_state with context %}
+{% block title %}Saved jobs{% endblock %}
+{% block content %}
+<div class="page-container"><div class="section-header"><div><span class="eyebrow">Your shortlist</span><h1 class="page-title mt-3">Saved jobs</h1><p class="page-subtitle">Keep the roles you want to come back to in one calm, focused list.</p></div><a href="{{ url_for('jobs.search') }}" class="btn btn-primary btn-small">{{ icon('search', 'icon-sm') }}Find more jobs</a></div><div class="job-grid">{% for item in items %}{{ job_card(item.job, saved=true) }}{% else %}{{ empty_state('bookmark', 'Nothing saved yet', 'Save a role from search and it will appear here when you are ready to revisit it.') }}{% endfor %}</div></div>
+{% endblock %}

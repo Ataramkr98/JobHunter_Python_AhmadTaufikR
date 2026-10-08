@@ -1,0 +1,6 @@
+# Container/runtime services used by docker-compose.yml (web, worker, beat).
+# Extends requirements.txt, which already pins the app, psycopg2 and gunicorn.
+-r requirements.txt
+
+celery>=5.4,<6
+redis>=5,<8

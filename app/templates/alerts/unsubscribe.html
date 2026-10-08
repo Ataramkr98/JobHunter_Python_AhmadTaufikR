@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_badge with context %}
+{% block title %}Unsubscribe — {{ alert.name }}{% endblock %}
+{% block content %}
+<div class="page-container">
+  <div class="section-header">
+    <div>
+      <span class="eyebrow">Email preferences</span>
+      <h1 class="page-title mt-3">Stop this alert</h1>
+      <p class="page-subtitle">Confirm below and JobHunter will stop sending matches for this saved search. Your saved jobs and applications are not affected.</p>
+    </div>
+  </div>
+
+  <div class="panel panel-pad">
+    <div class="panel-heading">
+      <div>
+        <h2>{{ alert.name }}</h2>
+        <p>
+          {{ alert.frequency|title }} delivery
+          {%- if alert.query %}
+            {%- if alert.query.get('q') %} · &ldquo;{{ alert.query.get('q') }}&rdquo;{% else %} · all jobs{% endif %}
+            {%- if alert.query.get('location') %} · {{ alert.query.get('location') }}{% endif %}
+            {%- if alert.query.get('remote') == '1' %} · remote{% endif %}
+          {%- endif %}
+        </p>
+      </div>
+      {{ status_badge('Active' if alert.active else 'Paused', 'active' if alert.active else 'neutral') }}
+    </div>
+
+    {% if alert.active %}
+      <form method="post" class="stack-sm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-danger" type="submit">{{ icon('bell-off', 'icon-sm') }}Unsubscribe from this alert</button>
+      </form>
+      <p class="field-help">Changed your mind? You can turn the alert back on any time from your <a href="{{ url_for('alerts.index') }}">alerts page</a>.</p>
+    {% else %}
+      <p class="field-help">This alert is already paused — nothing further to do.</p>
+      <a href="{{ url_for('alerts.index') }}" class="btn btn-secondary btn-small">{{ icon('arrow-left', 'icon-sm') }}Back to alerts</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

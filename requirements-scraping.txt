@@ -1,0 +1,6 @@
+# Optional ingestion stack. Install only on workers that run the spiders.
+Scrapy>=2.11,<3
+scrapy-playwright>=0.0.41,<1
+playwright>=1.45,<2
+itemadapter>=0.9,<1
+

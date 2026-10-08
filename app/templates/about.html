@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon with context %}
+{% block title %}About JobHunter{% endblock %}
+{% block content %}
+<div class="page-container">
+  <section class="auth-layout about-band">
+    <div class="auth-aside"><span class="eyebrow">About JobHunter</span><h1>A calmer way to look for work.</h1><p>JobHunter aggregates job listings from many portals into one clean, de-duplicated, searchable index so you can focus on finding the right next step.</p></div>
+    <div class="panel panel-pad stack"><div class="panel-heading"><div><h2>Built for focused decisions</h2><p>A working prototype with the product foundations ready for a larger search ecosystem.</p></div>{{ icon('compass', 'icon-lg text-primary') }}</div><ul class="auth-list auth-list-flush"><li>{{ icon('layers', 'icon-sm') }}One normalized search across multiple portals</li><li>{{ icon('copy-check', 'icon-sm') }}Duplicate listings collapsed into one useful result</li><li>{{ icon('bell-ring', 'icon-sm') }}Saved jobs, alerts, applications, and resume tools</li><li>{{ icon('shield-check', 'icon-sm') }}Privacy-aware account and data controls</li></ul></div>
+  </section>
+  <section class="panel panel-pad mb-8"><span class="eyebrow">The details</span><div class="content-copy mt-4"><p>JobHunter ships with seeded demo data, search and filtering, employer posting, a structured resume builder, and content-based job matching. The production scraping stack lives under <code>scrapers/</code>; this interface keeps the candidate experience simple while the data layer does the heavy lifting.</p></div></section>
+</div>
+{% endblock %}

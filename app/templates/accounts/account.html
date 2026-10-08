@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon with context %}
+{% block title %}Account{% endblock %}
+{% block content %}
+<div class="page-container"><div class="section-header"><div><span class="eyebrow">Settings</span><h1 class="page-title mt-3">Your account</h1><p class="page-subtitle">Keep your profile details current so saved searches and applications stay useful.</p></div></div><div class="stack">
+  <section class="panel panel-pad"><div class="panel-heading"><div><h2>Profile details</h2><p>These details are used to personalize your workspace.</p></div>{{ icon('user-round', 'icon-lg text-primary') }}</div><form method="post" class="stack"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="form-grid"><div class="field"><label class="field-label" for="display-name">Display name</label><input id="display-name" name="display_name" autocomplete="name" value="{{ current_user.display_name }}" class="input"></div><div class="field"><label class="field-label" for="default-location">Default location</label><input id="default-location" name="default_location" value="{{ current_user.default_location }}" class="input" placeholder="Jakarta or remote"></div></div><div><button class="btn btn-primary" type="submit">Save changes {{ icon('check', 'icon-sm') }}</button></div></form></section>
+  <section class="panel panel-pad panel-danger"><div class="panel-heading"><div><h2>Delete account</h2><p>Per your right to erasure (PDP), this anonymizes and soft-deletes your personal data.</p></div>{{ icon('triangle-alert', 'icon-lg text-danger') }}</div><form method="post" action="{{ url_for('accounts.delete_account') }}" onsubmit="return confirm('Delete your account and personal data?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-danger" type="submit">Delete my account</button></form></section>
+</div></div>
+{% endblock %}

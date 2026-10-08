@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, job_card, empty_state, job_filter_form, pagination with context %}
+{% block title %}Search jobs{% endblock %}
+{% block content %}
+<div class="page-container">
+  <div class="search-page-head">
+    <div><span class="eyebrow">Discover</span><h1 class="page-title mt-3">Search jobs</h1><p class="page-subtitle">{% if page_params %}{{ result.total }} {{ 'role matches' if result.total == 1 else 'roles match' }} your filters — adjust them to widen the search.{% else %}{{ result.total }} roles indexed across every source. Narrow the list until the right opportunity stands out.{% endif %}</p></div>
+    <a href="{{ url_for('main.home') }}" class="section-link">Back home {{ icon('arrow-up-right', 'icon-sm') }}</a>
+  </div>
+
+  <div class="search-layout">
+    <div class="filter-panel panel">
+      <div class="desktop-filter-form panel-pad">
+        <div class="panel-heading"><div><h2>Refine results</h2><p>Search by the things that matter to you.</p></div></div>
+        {{ job_filter_form(args, types, categories, 'desktop-') }}
+      </div>
+      <details class="mobile-filter-details">
+        <summary class="filter-toggle btn btn-secondary">{{ icon('sliders-horizontal', 'icon-sm') }}Filters <span>{{ icon('chevron-down', 'icon-sm') }}</span></summary>
+        <div class="panel-pad">
+          <div class="panel-heading"><div><h2>Refine results</h2><p>Search by the things that matter to you.</p></div></div>
+          {{ job_filter_form(args, types, categories, 'mobile-') }}
+        </div>
+      </details>
+    </div>
+
+    <div class="results-column">
+      <div class="results-toolbar">
+        <span class="results-count">Showing {{ result.jobs|length }} of {{ result.total }} jobs</span>
+        <div class="flex flex-wrap items-center gap-2">
+          <form method="get" action="{{ url_for('jobs.search') }}" class="sort-control">
+            {% for k in ['q','location','type','category','salary_min','remote','freshness'] %}{% if args.get(k) %}<input type="hidden" name="{{ k }}" value="{{ args.get(k) }}">{% endif %}{% endfor %}
+            <label for="sort">Sort</label><select id="sort" name="sort" onchange="this.form.submit()" class="select"><option value="newest" {% if args.get('sort','newest') == 'newest' %}selected{% endif %}>Newest</option><option value="salary" {% if args.get('sort') == 'salary' %}selected{% endif %}>Highest salary</option></select>
+          </form>
+          {% if current_user.is_authenticated %}
+          <form method="post" action="{{ url_for('alerts.create') }}" class="alert-create">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="q" value="{{ args.get('q','') }}"><input type="hidden" name="location" value="{{ args.get('location','') }}"><input type="hidden" name="type" value="{{ args.get('type','') }}"><input type="hidden" name="category" value="{{ args.get('category','') }}"><input type="hidden" name="salary_min" value="{{ args.get('salary_min','') }}"><input type="hidden" name="remote" value="{{ args.get('remote','') }}"><input type="hidden" name="freshness" value="{{ args.get('freshness','') }}">
+            <label for="alert-frequency" class="sr-only">Alert frequency</label><select id="alert-frequency" name="frequency" class="select"><option value="instant">Every 15 min</option><option value="daily" selected>Daily</option><option value="weekly">Weekly</option></select><button class="btn btn-secondary btn-small" type="submit">{{ icon('bell-plus', 'icon-sm') }}Alert me</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      <div class="stack-sm">
+        {% for job in result.jobs %}{{ job_card(job, saved=job.id in saved_ids) }}{% else %}
+          {{ empty_state('search-x', 'No jobs match these filters', 'Try widening the location, category, or freshness window.') }}
+        {% endfor %}
+      </div>
+      {% if result.pages > 1 %}
+        {{ pagination(result.page, result.pages, 'jobs.search', page_params) }}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

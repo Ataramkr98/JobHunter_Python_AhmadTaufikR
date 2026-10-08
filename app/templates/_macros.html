@@ -1,0 +1,121 @@
+{% macro icon(name, extra='') %}
+<svg class="icon {{ extra }}" aria-hidden="true" focusable="false"><use href="{{ url_for('static', filename='icons/lucide-sprite.svg') }}#{{ name }}"></use></svg>
+{% endmacro %}
+
+{% macro nav_item(endpoint, label, icon_name) %}
+{% set current = request.endpoint or '' %}
+<a href="{{ url_for(endpoint) }}" class="sidebar-nav-item {% if current == endpoint or (endpoint in ['employer.dashboard', 'admin.dashboard'] and current.startswith(endpoint.split('.')[0] ~ '.')) or (endpoint == 'resume.builder' and current == 'resume.preview') %}is-active{% endif %}">
+  {{ icon(icon_name) }}<span>{{ label }}</span>
+</a>
+{% endmacro %}
+
+{#
+  Windowed pagination. Renders first/last plus a sliding window around the
+  current page, so a large result set produces ~7 links instead of one per page.
+  `params` is a dict of the active query-string filters (excluding `page`).
+#}
+{% macro pagination(page, pages, endpoint, params={}) %}
+{% if pages > 1 %}
+  {% set window = 2 %}
+  {% set start = [1, page - window]|max %}
+  {% set end = [pages, page + window]|min %}
+  <nav class="pagination" aria-label="Pagination">
+    {% if page > 1 %}
+      <a href="{{ url_for(endpoint, page=page - 1, **params) }}" rel="prev" aria-label="Previous page">‹</a>
+    {% else %}
+      <span aria-disabled="true" aria-label="Previous page">‹</span>
+    {% endif %}
+
+    {% if start > 1 %}
+      <a href="{{ url_for(endpoint, page=1, **params) }}">1</a>
+      {% if start > 2 %}<span class="pagination-ellipsis" aria-hidden="true">…</span>{% endif %}
+    {% endif %}
+
+    {% for p in range(start, end + 1) %}
+      <a href="{{ url_for(endpoint, page=p, **params) }}"
+         {% if p == page %}class="is-active" aria-current="page"{% endif %}>{{ p }}</a>
+    {% endfor %}
+
+    {% if end < pages %}
+      {% if end < pages - 1 %}<span class="pagination-ellipsis" aria-hidden="true">…</span>{% endif %}
+      <a href="{{ url_for(endpoint, page=pages, **params) }}">{{ pages }}</a>
+    {% endif %}
+
+    {% if page < pages %}
+      <a href="{{ url_for(endpoint, page=page + 1, **params) }}" rel="next" aria-label="Next page">›</a>
+    {% else %}
+      <span aria-disabled="true" aria-label="Next page">›</span>
+    {% endif %}
+
+    <span class="pagination-meta">Page {{ page }} of {{ pages }}</span>
+  </nav>
+{% endif %}
+{% endmacro %}
+
+{% macro status_badge(label, tone='neutral') %}
+<span class="status-badge status-{{ tone }}">{{ label }}</span>
+{% endmacro %}
+
+{% macro empty_state(icon_name, title, body) %}
+<div class="empty-state">
+  <span class="empty-state-icon">{{ icon(icon_name) }}</span>
+  <h2>{{ title }}</h2>
+  <p>{{ body }}</p>
+</div>
+{% endmacro %}
+
+{% macro job_card(job, saved=false, score=none, matched=none) %}
+<article class="job-card">
+  <div class="job-card-main">
+    <div class="company-mark">{{ icon('building-2') }}</div>
+    <div class="job-card-copy">
+      <div class="job-card-topline">
+        <div>
+          <a href="{{ url_for('jobs.detail', job_id=job.id) }}" class="job-card-title">{{ job.title }}</a>
+          <p class="job-card-company"><a href="{{ url_for('jobs.company', slug=job.company.slug) }}">{{ job.company.name }}</a><span aria-hidden="true">·</span>{{ job.location_display }}</p>
+        </div>
+        {% if score is not none %}
+          <div class="match-pill {% if score >= 50 %}match-good{% elif score >= 25 %}match-mid{% endif %}"><span>{{ score }}%</span><small>match</small></div>
+        {% endif %}
+      </div>
+      <div class="job-meta-row">
+        <span class="meta-chip">{{ icon('briefcase-business', 'icon-xs') }}{{ job.employment_type_display }}</span>
+        <span class="meta-chip">{{ icon('layers', 'icon-xs') }}{{ job.category }}</span>
+        {% if job.is_remote %}<span class="meta-chip meta-chip-success">{{ icon('wifi', 'icon-xs') }}Remote</span>{% endif %}
+        <span class="meta-chip meta-chip-salary">{{ icon('banknote', 'icon-xs') }}{{ job.salary_display }}</span>
+      </div>
+      {% if matched %}
+        <p class="matched-skills">Matched skills: {% for s in matched %}<strong>{{ s }}</strong>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="job-card-footer">
+    <div class="job-card-actions">
+      {% if current_user.is_authenticated %}
+        <form method="post" action="{{ url_for('jobs.save', job_id=job.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-secondary btn-small {% if saved %}is-selected{% endif %}" type="submit">{{ icon('bookmark', 'icon-sm') }}<span>{{ 'Saved' if saved else 'Save' }}</span></button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('accounts.login', next=request.full_path) }}" class="btn btn-secondary btn-small">{{ icon('bookmark', 'icon-sm') }}<span>Save</span></a>
+      {% endif %}
+      <a href="{{ url_for('jobs.detail', job_id=job.id) }}" class="btn btn-primary btn-small">View details {{ icon('arrow-up-right', 'icon-sm') }}</a>
+    </div>
+    {% if job.posted_at %}<time class="job-date" datetime="{{ job.posted_at.isoformat() }}">{{ job.posted_at.strftime('%d %b %Y') }}</time>{% endif %}
+  </div>
+</article>
+{% endmacro %}
+
+{% macro job_filter_form(args, types, categories, id_prefix='') %}
+<form method="get" action="{{ url_for('jobs.search') }}" class="stack-sm">
+  <div class="field"><label class="field-label" for="{{ id_prefix }}search-keyword">Keyword</label><input id="{{ id_prefix }}search-keyword" name="q" value="{{ args.get('q','') }}" class="input" placeholder="Role, skill, company"></div>
+  <div class="field"><label class="field-label" for="{{ id_prefix }}search-location">Location</label><input id="{{ id_prefix }}search-location" name="location" value="{{ args.get('location','') }}" class="input" placeholder="Jakarta or remote"></div>
+  <div class="field"><label class="field-label" for="{{ id_prefix }}search-type">Employment type</label><select id="{{ id_prefix }}search-type" name="type" class="select"><option value="">Any type</option>{% for t in types %}<option value="{{ t }}" {% if args.get('type') == t %}selected{% endif %}>{{ t.replace('_',' ')|title }}</option>{% endfor %}</select></div>
+  <div class="field"><label class="field-label" for="{{ id_prefix }}search-category">Category</label><select id="{{ id_prefix }}search-category" name="category" class="select"><option value="">Any category</option>{% for c in categories %}<option value="{{ c }}" {% if args.get('category') == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
+  <div class="field"><label class="field-label" for="{{ id_prefix }}search-salary">Minimum salary (IDR/mo)</label><input id="{{ id_prefix }}search-salary" name="salary_min" type="number" step="100000" value="{{ args.get('salary_min','') }}" class="input" placeholder="e.g. 12000000"></div>
+  <div class="field"><label class="field-label" for="{{ id_prefix }}search-freshness">Freshness</label><select id="{{ id_prefix }}search-freshness" name="freshness" class="select"><option value="">Any time</option><option value="1" {% if args.get('freshness') == '1' %}selected{% endif %}>Last 24h</option><option value="7" {% if args.get('freshness') == '7' %}selected{% endif %}>Last 7 days</option><option value="30" {% if args.get('freshness') == '30' %}selected{% endif %}>Last 30 days</option></select></div>
+  <label class="checkbox-row"><input type="checkbox" name="remote" value="1" {% if args.get('remote') == '1' %}checked{% endif %}> <span>Remote only</span></label>
+  <button class="btn btn-primary btn-block" type="submit">Apply filters {{ icon('arrow-right', 'icon-sm') }}</button>
+  <a href="{{ url_for('jobs.search') }}" class="btn btn-quiet btn-block">Clear filters</a>
+</form>
+{% endmacro %}

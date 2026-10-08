@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon with context %}
+{% block title %}Sign up{% endblock %}
+{% block content %}
+<div class="auth-layout">
+  <div class="auth-aside"><span class="eyebrow">Make your search yours</span><h1>A better shortlist, one role at a time.</h1><p>Create a free account to save jobs, track applications, build your resume, and receive alerts tailored to your search.</p><ul class="auth-list"><li>{{ icon('bookmark-check', 'icon-sm') }}Save roles across every source</li><li>{{ icon('clipboard-check', 'icon-sm') }}Keep your application pipeline clear</li><li>{{ icon('file-check', 'icon-sm') }}Build once, match more thoughtfully</li></ul></div>
+  <div class="panel auth-panel"><h2>Create your account</h2><p class="page-subtitle">Start with the basics. You can complete your profile later.</p><form method="post" class="stack mt-6"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="field"><label class="field-label" for="register-name">Display name</label><input id="register-name" name="display_name" autocomplete="name" class="input"></div><div class="field"><label class="field-label" for="register-email">Email</label><input id="register-email" name="email" type="email" autocomplete="email" required class="input"></div><div class="field"><label class="field-label" for="register-password">Password</label><input id="register-password" name="password" type="password" autocomplete="new-password" minlength="{{ min_password_length }}" required class="input"><p class="field-help">Use at least {{ min_password_length }} characters.</p></div><button class="btn btn-primary btn-block" type="submit">Create account {{ icon('arrow-right', 'icon-sm') }}</button></form><p class="auth-footnote">Already have an account? <a href="{{ url_for('accounts.login') }}">Log in</a></p></div>
+</div>
+{% endblock %}

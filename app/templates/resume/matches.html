@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, job_card, empty_state with context %}
+{% block title %}AI job matches{% endblock %}
+{% block content %}
+<div class="page-container"><div class="section-header"><div><span class="eyebrow">A more useful shortlist</span><h1 class="page-title mt-3">AI job matches</h1><p class="page-subtitle">Roles ranked by how closely your resume aligns with the title, skills, and description. {{ resume.full_name or 'Your profile' }} is the source.</p></div><a href="{{ url_for('resume.builder') }}" class="btn btn-secondary btn-small">{{ icon('file-pen-line', 'icon-sm') }}Edit resume</a></div><div class="stack-sm">{% for r in results %}{{ job_card(r.job, score=r.score, matched=r.matched_skills) }}{% else %}{{ empty_state('sparkles', 'No matches found yet', 'Add a few more skills or experiences to your resume and check back here.') }}{% endfor %}</div></div>
+{% endblock %}

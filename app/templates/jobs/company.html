@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, job_card, empty_state with context %}
+{% block title %}{{ company.name }}{% endblock %}
+{% block content %}
+<div class="page-container">
+  <section class="panel panel-pad mb-8">
+    <div class="flex items-start gap-4">
+      <div class="company-mark company-mark-large">{{ icon('building-2', 'icon-lg') }}</div>
+      <div class="min-w-0"><span class="eyebrow">Company</span><h1 class="page-title mt-3">{{ company.name }}</h1>{% if company.website %}<a href="{{ company.website }}" target="_blank" rel="noopener" class="section-link mt-3">Visit website {{ icon('external-link', 'icon-sm') }}</a>{% endif %}{% if company.description %}<p class="page-subtitle">{{ company.description }}</p>{% endif %}</div>
+    </div>
+  </section>
+  <div class="section-header"><div><span class="eyebrow">Open roles</span><h2 class="section-title mt-2">{{ jobs|length }} opportunities at {{ company.name }}</h2></div></div>
+  <div class="job-grid">{% for job in jobs %}{{ job_card(job) }}{% else %}{{ empty_state('briefcase-business', 'No open roles right now', 'Check back later for new opportunities from this company.') }}{% endfor %}</div>
+</div>
+{% endblock %}

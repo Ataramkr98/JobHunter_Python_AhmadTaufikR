@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Local data — never commit a database or a backup of one
+instance/
+*.db
+*.sqlite3
+*.db-*
+*.bak
+
+# Secrets
+.env
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+node_modules/
+
+# Local tooling scratch (browser-automation logs, agent memory)
+.playwright-cli/
+.workbuddy-ai/
+scrapers/.scrapy/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

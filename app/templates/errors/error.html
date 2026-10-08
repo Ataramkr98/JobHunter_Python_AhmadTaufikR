@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon with context %}
+{% block title %}{{ status }} — {{ title }}{% endblock %}
+{% block content %}
+<div class="page-container">
+  <section class="error-page">
+    <span class="error-code" aria-hidden="true">{{ status }}</span>
+    <span class="eyebrow">{{ 'Server error' if status >= 500 else 'Request error' }}</span>
+    <h1 class="page-title mt-3">{{ title }}</h1>
+    <p class="page-subtitle">{{ message }}</p>
+
+    {% if detail %}<p class="error-detail">{{ detail }}</p>{% endif %}
+
+    <p class="error-hint">{{ icon('lightbulb', 'icon-sm') }}<span>{{ hint }}</span></p>
+
+    {% if status == 404 %}
+    <form action="{{ url_for('jobs.search') }}" method="get" class="error-search">
+      <label class="sr-only" for="error-search-q">Search jobs</label>
+      {{ icon('search', 'icon-sm') }}
+      <input id="error-search-q" name="q" placeholder="Search by role, skill or company">
+      <button class="btn btn-primary btn-small" type="submit">Search</button>
+    </form>
+    {% endif %}
+
+    <div class="error-actions">
+      <a href="{{ url_for('main.home') }}" class="btn btn-primary">{{ icon('house', 'icon-sm') }}Back to home</a>
+      <a href="{{ url_for('jobs.search') }}" class="btn btn-secondary">{{ icon('search', 'icon-sm') }}Browse jobs</a>
+      {% if status >= 500 %}
+        <a href="{{ request.path }}" class="btn btn-quiet">{{ icon('refresh-cw', 'icon-sm') }}Try again</a>
+      {% endif %}
+    </div>
+
+    {% if status == 403 and not current_user.is_authenticated %}
+      <p class="error-footnote">You are not signed in. <a href="{{ url_for('accounts.login') }}">Log in</a> to continue.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

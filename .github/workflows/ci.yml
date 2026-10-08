@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (tests + config guardrails)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run the test suite
+        run: python -m unittest discover -v
+
+      # The app is meant to refuse to boot an insecure production config. If that
+      # guard ever regresses, CI is where it should be caught.
+      - name: Production refuses a default SECRET_KEY
+        run: |
+          ! FLASK_CONFIG=production DATABASE_URL=sqlite:///tmp/ci.db \
+            python -c "from app import create_app; create_app('production')"
+
+      - name: Production refuses SQLite without the explicit override
+        run: |
+          ! FLASK_CONFIG=production SECRET_KEY=$(python -c "import secrets;print(secrets.token_hex(32))") \
+            python -c "from app import create_app; create_app('production')"
+
+      - name: Production boots with a strong key and the SQLite override
+        run: |
+          FLASK_CONFIG=production \
+          SECRET_KEY=$(python -c "import secrets;print(secrets.token_hex(32))") \
+          ALLOW_SQLITE_IN_PRODUCTION=1 DATABASE_URL=sqlite:///tmp/ci.db \
+            python -c "from app import create_app; create_app('production')"
+
+  frontend:
+    name: Frontend (icon sprite is in sync)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend build dependencies
+        run: npm ci
+
+      # A template can reference an icon the sprite does not contain, which
+      # renders as an invisible gap. This fails the build instead.
+      - name: Icon sprite matches the templates
+        run: python scripts/build_icon_sprite.py --check
+
+      # Proves the stylesheet is reproducible from input.css rather than only
+      # being a checked-in artifact nobody can regenerate.
+      - name: Tailwind output is reproducible from source
+        run: |
+          cp app/static/css/app.css /tmp/app.css.committed
+          npm run build:css
+          diff -q /tmp/app.css.committed app/static/css/app.css
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the web image
+        run: docker build -t jobhunter-web .
+      - name: Build the worker image
+        run: docker build -f Dockerfile.worker -t jobhunter-worker .

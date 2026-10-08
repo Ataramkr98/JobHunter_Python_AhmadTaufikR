@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f4">
+  <title>{% block title %}JobHunter{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff !important; }
+      main { max-width: none !important; padding: 0 !important; }
+    }
+  </style>
+</head>
+<body class="app-body">
+  {% from "_macros.html" import icon, nav_item %}
+  {% set current_endpoint = request.endpoint or '' %}
+  {% set public_endpoint = current_endpoint in ['main.home', 'main.about', 'accounts.login', 'accounts.register'] %}
+  {% set workspace = current_user.is_authenticated and not public_endpoint %}
+
+  {% if workspace %}
+    <div class="workspace-shell">
+      <aside class="workspace-sidebar no-print" aria-label="Workspace navigation">
+        <a href="{{ url_for('main.home') }}" class="brand brand-sidebar"><span class="brand-mark">{{ icon('target') }}</span><span>JobHunter</span></a>
+        <div class="sidebar-scroll">
+          <p class="nav-label">Discover</p>
+          <nav class="nav-stack">{{ nav_item('jobs.search', 'Jobs', 'search') }}</nav>
+          <p class="nav-label">Your workspace</p>
+          <nav class="nav-stack">{{ nav_item('accounts.saved', 'Saved jobs', 'bookmark') }}{{ nav_item('accounts.applications', 'Applications', 'clipboard-check') }}{{ nav_item('resume.builder', 'Resume', 'file-text') }}{{ nav_item('resume.matches', 'AI matches', 'sparkles') }}{{ nav_item('alerts.index', 'Alerts', 'bell') }}</nav>
+          <p class="nav-label">Manage</p>
+          <nav class="nav-stack">{{ nav_item('employer.dashboard', 'Employer', 'building-2') }}{% if current_user.is_admin %}{{ nav_item('admin.dashboard', 'Admin', 'shield-check') }}{% endif %}</nav>
+        </div>
+        <div class="sidebar-account">
+          <a href="{{ url_for('accounts.account') }}" class="account-chip"><span class="avatar avatar-small">{{ (current_user.display_name or current_user.email)[0]|upper }}</span><span class="account-chip-copy"><strong>{{ current_user.display_name or 'Your account' }}</strong><small>{{ current_user.email }}</small></span>{{ icon('settings-2', 'icon-sm') }}</a>
+          <form method="post" action="{{ url_for('accounts.logout') }}" class="mt-2"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="sidebar-logout" type="submit">{{ icon('log-out', 'icon-sm') }} <span>Log out</span></button></form>
+        </div>
+      </aside>
+      <div class="workspace-content">
+        <header class="workspace-topbar no-print"><a href="{{ url_for('main.home') }}" class="brand brand-mobile"><span class="brand-mark">{{ icon('target') }}</span><span>JobHunter</span></a><div class="workspace-topbar-spacer"></div><a href="{{ url_for('jobs.search') }}" class="topbar-quick-link">{{ icon('search', 'icon-sm') }}<span>Find a job</span></a><a href="{{ url_for('accounts.account') }}" class="topbar-profile"><span class="avatar avatar-small">{{ (current_user.display_name or current_user.email)[0]|upper }}</span><span class="hidden sm:inline">{{ current_user.display_name or current_user.email }}</span></a></header>
+  {% else %}
+    <header class="public-topbar no-print"><div class="page-container topbar-inner"><a href="{{ url_for('main.home') }}" class="brand"><span class="brand-mark">{{ icon('target') }}</span><span>JobHunter</span></a><nav class="public-nav" aria-label="Primary navigation"><a href="{{ url_for('jobs.search') }}" class="public-nav-link {% if request.endpoint == 'jobs.search' %}is-active{% endif %}">Jobs</a><a href="{{ url_for('main.about') }}" class="public-nav-link {% if request.endpoint == 'main.about' %}is-active{% endif %}">About</a></nav><div class="topbar-actions">{% if current_user.is_authenticated %}<a href="{{ url_for('accounts.account') }}" class="topbar-profile"><span class="avatar avatar-small">{{ (current_user.display_name or current_user.email)[0]|upper }}</span><span class="hidden sm:inline">{{ current_user.display_name or current_user.email }}</span></a>{% else %}<a href="{{ url_for('accounts.login') }}" class="topbar-quiet-link">Log in</a><a href="{{ url_for('accounts.register') }}" class="btn btn-primary btn-small">Get started</a>{% endif %}</div></div></header>
+  {% endif %}
+
+  <main class="page-main {% if not workspace %}page-main-public{% endif %}">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="{% if not workspace %}page-container {% endif %}flash flash-{{ category }}" role="status">{{ icon('circle-check' if category == 'success' else ('circle-alert' if category == 'error' else 'info'), 'icon-sm') }}<span>{{ message }}</span></div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if workspace %}
+      </div>
+      <nav class="mobile-bottom-nav no-print" aria-label="Mobile workspace navigation"><a href="{{ url_for('jobs.search') }}" class="mobile-nav-item {% if request.endpoint == 'jobs.search' %}is-active{% endif %}">{{ icon('search') }}<span>Jobs</span></a><a href="{{ url_for('accounts.saved') }}" class="mobile-nav-item {% if request.endpoint == 'accounts.saved' %}is-active{% endif %}">{{ icon('bookmark') }}<span>Saved</span></a><a href="{{ url_for('accounts.applications') }}" class="mobile-nav-item {% if request.endpoint == 'accounts.applications' %}is-active{% endif %}">{{ icon('clipboard-check') }}<span>Applied</span></a><a href="{{ url_for('resume.builder') }}" class="mobile-nav-item {% if current_endpoint.startswith('resume.') %}is-active{% endif %}">{{ icon('file-text') }}<span>Resume</span></a><details class="mobile-more"><summary class="mobile-nav-item">{{ icon('menu') }}<span>More</span></summary><div class="mobile-more-menu"><a href="{{ url_for('resume.matches') }}">{{ icon('sparkles', 'icon-sm') }}AI matches</a><a href="{{ url_for('alerts.index') }}">{{ icon('bell', 'icon-sm') }}Alerts</a><a href="{{ url_for('employer.dashboard') }}">{{ icon('building-2', 'icon-sm') }}Employer</a>{% if current_user.is_admin %}<a href="{{ url_for('admin.dashboard') }}">{{ icon('shield-check', 'icon-sm') }}Admin</a>{% endif %}<a href="{{ url_for('accounts.account') }}">{{ icon('settings-2', 'icon-sm') }}Account</a><form method="post" action="{{ url_for('accounts.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">{{ icon('log-out', 'icon-sm') }}Log out</button></form></div></details></nav>
+    </div>
+  {% else %}
+    <footer class="public-footer no-print"><div class="page-container footer-inner"><span class="footer-brand"><span class="brand-mark brand-mark-small">{{ icon('target') }}</span>JobHunter</span><span>One search across every job portal · <a href="{{ url_for('main.about') }}">About</a></span></div></footer>
+  {% endif %}
+</body>
+</html>

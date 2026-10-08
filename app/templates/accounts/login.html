@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon with context %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="auth-layout">
+  <div class="auth-aside"><span class="eyebrow">Welcome back</span><h1>Your next move starts here.</h1><p>Pick up where you left off—saved roles, applications, alerts, and a resume that is ready to go.</p><ul class="auth-list"><li>{{ icon('bookmark-check', 'icon-sm') }}Keep promising roles close</li><li>{{ icon('bell-ring', 'icon-sm') }}Get notified when the right jobs land</li><li>{{ icon('sparkles', 'icon-sm') }}See roles that fit your resume</li></ul></div>
+  <div class="panel auth-panel"><h2>Log in to JobHunter</h2><p class="page-subtitle">Use your account to continue your search.</p><form method="post" class="stack mt-6"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}<div class="field"><label class="field-label" for="login-email">Email</label><input id="login-email" name="email" type="email" autocomplete="username" required class="input"></div><div class="field"><div class="field-label-row"><label class="field-label" for="login-password">Password</label><a class="field-link" href="{{ url_for('accounts.forgot_password') }}">Forgot password?</a></div><input id="login-password" name="password" type="password" autocomplete="current-password" required class="input"></div><button class="btn btn-primary btn-block" type="submit">Log in {{ icon('arrow-right', 'icon-sm') }}</button></form><p class="auth-footnote">No account yet? <a href="{{ url_for('accounts.register') }}">Create one</a></p><div class="demo-note">{{ icon('info', 'icon-sm') }}<span>Demo login: <code>demo@example.com</code> / <code>demo12345</code></span></div></div>
+</div>
+{% endblock %}

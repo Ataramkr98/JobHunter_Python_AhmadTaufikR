@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, job_card, empty_state with context %}
+{% block title %}JobHunter — One search across every job portal{% endblock %}
+{% block content %}
+<section class="hero-section">
+  <div class="page-container">
+    <div class="hero-copy">
+      <span class="eyebrow">The focused job search</span>
+      <h1 class="hero-title">Find the next role that feels <em>right.</em></h1>
+      <p class="hero-lede">One clean search across the job portals you already use. We normalize, de-duplicate, and organize the details so you can spend your time applying with intent.</p>
+      <form action="{{ url_for('jobs.search') }}" method="get" class="hero-search">
+        <label class="hero-search-field"><span class="sr-only">Job title, keyword, or company</span>{{ icon('search', 'icon-sm') }}<input name="q" value="{{ q }}" placeholder="Job title, keyword, or company"></label>
+        <label class="hero-search-field"><span class="sr-only">City or remote</span>{{ icon('map-pin', 'icon-sm') }}<input name="location" value="{{ location }}" placeholder="City or remote"></label>
+        <button class="btn btn-primary" type="submit">Search {{ icon('arrow-up-right', 'icon-sm') }}</button>
+      </form>
+      <div class="hero-stats" aria-label="JobHunter live statistics">
+        <span class="hero-stat">{{ icon('radio', 'icon-sm') }}<strong>{{ "{:,}".format(total_jobs) }}</strong> live jobs</span>
+        <span class="hero-stat">{{ icon('layers', 'icon-sm') }}<strong>{{ total_sources }}</strong> sources</span>
+        <span class="hero-stat">{{ icon('shield-check', 'icon-sm') }}Fresh, de-duplicated listings</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="page-container">
+  {% if categories %}
+  <section class="home-section" aria-labelledby="category-heading">
+    <div class="section-header">
+      <div><span class="eyebrow">Explore</span><h2 id="category-heading" class="section-title mt-2">Browse by category</h2></div>
+      <a href="{{ url_for('jobs.search') }}" class="section-link">View all jobs {{ icon('arrow-up-right', 'icon-sm') }}</a>
+    </div>
+    <div class="category-grid">
+      {#
+        One glyph per category the taxonomy in app/services/normalization.py can
+        produce, so a category tile never falls back to the generic briefcase.
+        Keep the keys in sync with _CATEGORY_BY_TITLE (plus "Other").
+      #}
+      {% set category_icons = {
+        'Engineering': 'code',
+        'Data': 'chart-no-axes-combined',
+        'Design': 'palette',
+        'Product': 'boxes',
+        'Marketing': 'megaphone',
+        'Sales': 'handshake',
+        'Finance': 'landmark',
+        'Human Resources': 'users',
+        'Operations': 'workflow',
+        'Customer Support': 'messages-square',
+        'Other': 'briefcase-business'
+      } %}
+      {% for c in categories %}
+        <a href="{{ url_for('jobs.search', category=c) }}" class="category-tile"><span class="category-icon">{{ icon(category_icons.get(c, 'briefcase-business'), 'icon-sm') }}</span><span>{{ c }}</span>{{ icon('arrow-up-right', 'icon-xs ml-auto') }}</a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="home-section" aria-labelledby="fresh-heading">
+    <div class="section-header">
+      <div><span class="eyebrow">Just added</span><h2 id="fresh-heading" class="section-title mt-2">Fresh jobs</h2></div>
+      <a href="{{ url_for('jobs.search') }}" class="section-link">View all {{ icon('arrow-up-right', 'icon-sm') }}</a>
+    </div>
+    <div class="job-grid">
+      {% for job in jobs %}{{ job_card(job) }}{% else %}
+        {{ empty_state('search-x', 'No jobs yet', 'Run the seed script to load the latest demo listings.') }}
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
