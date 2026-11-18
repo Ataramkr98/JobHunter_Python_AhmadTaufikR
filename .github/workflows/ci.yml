@@ -89,6 +89,9 @@ jobs:
         run: |
           set -o pipefail
           docker build --progress=plain -f Dockerfile.worker -t jobhunter-worker . 2>&1 | tee /tmp/worker-build.log
+      - name: Verify Chromium starts
+        run: |
+          docker run --rm --network none --shm-size=256m jobhunter-worker python -c "from playwright.sync_api import sync_playwright; p = sync_playwright().start(); browser = p.chromium.launch(); print(browser.version); browser.close(); p.stop()"
       - name: Summarize worker build failure
         if: failure() && steps.worker.outcome == 'failure'
         run: |

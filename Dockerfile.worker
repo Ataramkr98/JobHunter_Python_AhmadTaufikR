@@ -1,5 +1,8 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libatomic1 \
+    && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt requirements-production.txt requirements-scraping.txt ./
 RUN pip install --no-cache-dir -r requirements-production.txt -r requirements-scraping.txt \
     && playwright install --with-deps chromium
