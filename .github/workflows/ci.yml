@@ -85,4 +85,17 @@ jobs:
       - name: Build the web image
         run: docker build -t jobhunter-web .
       - name: Build the worker image
-        run: docker build -f Dockerfile.worker -t jobhunter-worker .
+        id: worker
+        run: |
+          set -o pipefail
+          docker build --progress=plain -f Dockerfile.worker -t jobhunter-worker . 2>&1 | tee /tmp/worker-build.log
+      - name: Summarize worker build failure
+        if: failure() && steps.worker.outcome == 'failure'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          message = Path('/tmp/worker-build.log').read_text(errors='replace')[-6000:]
+          message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print(f'::error title=Worker build failure::{message}')
+          PY
