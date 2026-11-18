@@ -1,6 +1,7 @@
 """Jobs blueprint: search, detail, company, save, track."""
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
+from urllib.parse import urlsplit
 
 from app.extensions import db
 from app.models.user import SavedJob, Application
@@ -77,12 +78,22 @@ def detail(job_id):
         if link.source.name == "Employer Portal" or link.source_id in seen_sources:
             continue
         seen_sources.add(link.source_id)
-        apply_links.append(link)
+        try:
+            target = urlsplit(link.url)
+            host = (target.hostname or '').lower().rstrip('.')
+            demo = any(host == domain or host.endswith('.' + domain)
+                       for domain in ('example.com', 'example.org', 'example.net'))
+            usable = target.scheme in ('http', 'https') and bool(host) and not target.username
+        except ValueError:
+            demo, usable = False, False
+        apply_links.append({'source': link.source, 'url': link.url if usable and not demo else None,
+                            'demo': demo})
 
     return render_template(
         "jobs/detail.html", job=job, posted_job=posted_job, saved=saved,
         applied=applied, submitted=submitted, fit=fit, similar=similar,
         apply_links=apply_links,
+        has_demo_links=any(link['demo'] for link in apply_links),
     )
 
 

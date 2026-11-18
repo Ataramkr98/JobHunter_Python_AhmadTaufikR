@@ -651,6 +651,25 @@ class JobHunterTestCase(unittest.TestCase):
         self.assertIn("every 6 hours", body)
         self.assertNotIn("*/6", body)
 
+    def test_demo_sources_cannot_send_visitors_to_placeholder_application_urls(self):
+        with self.app.app_context():
+            demo_source = Source(name="Glints", engine="api", enabled=True)
+            real_source = Source(name="Company Careers", engine="api", enabled=True)
+            db.session.add_all([demo_source, real_source])
+            db.session.flush()
+            db.session.add_all([
+                JobSource(job_id=self.external_job_id, source_id=demo_source.id,
+                          external_id="sample", url="https://example.com/glints/jobs/1"),
+                JobSource(job_id=self.external_job_id, source_id=real_source.id,
+                          external_id="real", url="https://careers.company.dev/jobs/1"),
+            ])
+            db.session.commit()
+        body = self.client.get(f"/jobs/{self.external_job_id}").get_data(as_text=True)
+        self.assertNotIn('href="https://example.com', body)
+        self.assertIn("Glints · sample source", body)
+        self.assertIn("External applications are disabled for demo sources", body)
+        self.assertIn('href="https://careers.company.dev/jobs/1"', body)
+
     def test_auth_pages_link_password_recovery(self):
         login = self.client.get("/auth/login")
         self.assertIn(b"/auth/forgot-password", login.data)

@@ -66,5 +66,5 @@ def matches():
     if not resume:
         flash("Build your resume to get AI job matches.", "info")
         return redirect(url_for("resume.builder"))
-    results = match_jobs(resume_to_profile_text(resume), top_n=12, profile_skills=resume.skills)
+    results = match_jobs(resume_to_profile_text(resume), top_n=12, profile_skills=resume.skills, explain=True)
     return render_template("resume/matches.html", resume=resume, results=results)

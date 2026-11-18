@@ -117,6 +117,7 @@ _DATABASE_URL = normalize_database_url(
 
 
 class Config:
+    DEMO_MODE = _env_bool("DEMO_MODE", False)
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me-in-production")
 
     SQLALCHEMY_DATABASE_URI = _DATABASE_URL
@@ -165,9 +166,10 @@ class Config:
     # app/services/ai_gateway.py requires BOTH a base URL and a key, so the
     # feature stays off until an operator deliberately opts in.
     AI_BASE_URL = os.environ.get("AI_BASE_URL", "")
-    AI_API_KEY = os.environ.get("AI_API_KEY", "")
-    AI_TIMEOUT_SECONDS = _env_int("AI_TIMEOUT_SECONDS", 60)
-    AI_MAX_RETRIES = _env_int("AI_MAX_RETRIES", 2)
+    AI_API_KEY = os.environ.get("AI_API_KEY") or os.environ.get("GROQ_API_KEY", "")
+    AI_TIMEOUT_SECONDS = _env_int("AI_TIMEOUT_SECONDS", 12)
+    AI_MAX_RETRIES = _env_int("AI_MAX_RETRIES", 1)
+    AI_CACHE_SECONDS = _env_int("AI_CACHE_SECONDS", 900)
     AI_MODEL_DEFAULT = os.environ.get("AI_MODEL_DEFAULT", "")
     AI_MODEL_CHAT = os.environ.get("AI_MODEL_CHAT", "")
     AI_MODEL_ANALYZE = os.environ.get("AI_MODEL_ANALYZE", "")
@@ -213,6 +215,7 @@ class TestingConfig(Config):
     SQLALCHEMY_ENGINE_OPTIONS = {}
     # Keep the limiter out of the way of tests that hammer /auth/login.
     LOGIN_RATE_LIMIT = 0
+    AI_EXPLAIN_MATCHES = False
 
 
 config_by_name = {

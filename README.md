@@ -11,6 +11,18 @@ structured resume builder, and content-based AI job matching.
 Built with **Flask + SQLAlchemy 2.x** on the backend and **Jinja2 + Tailwind CSS** on
 the front end — server-rendered, SEO-friendly, no client-side framework.
 
+**Live demo:** [job-hunter.taufikr.web.id](https://job-hunter.taufikr.web.id/).
+Sign in with `demo@example.com` / `demo12345`, then open
+[AI matches](https://job-hunter.taufikr.web.id/resume/matches). The top result and
+job detail show a Groq-generated explanation (`openai/gpt-oss-20b`) alongside the
+TF-IDF/cosine similarity score. The model explains the ranking without changing it.
+See [AI setup and limitations](docs/ai.md).
+
+The public portfolio uses `DEMO_MODE=true` and seeded sample listings. Links on
+reserved example domains are displayed as sample sources, without an Apply action.
+Real source URLs remain usable. Demo mode labels the workspace and its job counts;
+set it to `false` for a live job board.
+
 ---
 
 ## Table of contents
@@ -299,6 +311,8 @@ npm run screenshots    # in another
 
 ## Environment variables
 
+For Groq setup, visible explanations and matching-score behavior, see [AI matching](docs/ai.md).
+
 Copy `.env.example` to `.env`. Real environment variables always take precedence.
 
 | Variable | Default | Purpose |
@@ -317,7 +331,14 @@ Copy `.env.example` to `.env`. Real environment variables always take precedence
 | `MIN_PASSWORD_LENGTH` | `8` | Minimum password length on register and reset |
 | `MAIL_DEFAULT_SENDER` | `alerts@jobhunter.local` | From-address for outbound email |
 | `REDIS_URL` | — | Broker for the optional Celery worker |
+| `MATCHING_BACKEND` | `sklearn` | `stdlib` avoids NumPy/SciPy imports for small corpora on low-memory hosts |
 | `AI_BASE_URL` / `AI_API_KEY` | empty | Optional OpenAI-compatible gateway. Both empty ⇒ fully offline |
+
+The `stdlib` matcher keeps English stopwords, unigram/bigram features, smooth
+IDF, L2 normalization and cosine scoring. At the 8000-feature cap, tied term
+frequencies use lexical order and may select different equal-frequency terms
+than NumPy sorting. It is intended for demo corpora; use the default backend
+for larger workloads. Tests compare ordinary-corpus scores against sklearn.
 
 Two production guardrails are worth calling out:
 

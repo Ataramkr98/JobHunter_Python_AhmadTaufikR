@@ -14,9 +14,9 @@
         <button class="btn btn-primary" type="submit">Search {{ icon('arrow-up-right', 'icon-sm') }}</button>
       </form>
       <div class="hero-stats" aria-label="JobHunter live statistics">
-        <span class="hero-stat">{{ icon('radio', 'icon-sm') }}<strong>{{ "{:,}".format(total_jobs) }}</strong> live jobs</span>
+        <span class="hero-stat">{{ icon('radio', 'icon-sm') }}<strong>{{ "{:,}".format(total_jobs) }}</strong> {{ 'sample jobs' if config.DEMO_MODE else 'live jobs' }}</span>
         <span class="hero-stat">{{ icon('layers', 'icon-sm') }}<strong>{{ total_sources }}</strong> sources</span>
-        <span class="hero-stat">{{ icon('shield-check', 'icon-sm') }}Fresh, de-duplicated listings</span>
+        <span class="hero-stat">{{ icon('shield-check', 'icon-sm') }}{{ 'Sample data for product review' if config.DEMO_MODE else 'Fresh, de-duplicated listings' }}</span>
       </div>
     </div>
   </div>
