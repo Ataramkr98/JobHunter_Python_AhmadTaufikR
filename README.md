@@ -399,16 +399,18 @@ curl -X POST http://127.0.0.1:5000/api/match \
 python -m unittest discover -v
 ```
 
-26 tests covering public and authenticated page rendering, role permissions, the
+42 tests (plus 35 subtests when run through pytest) cover public and authenticated page rendering, role permissions, the
 employer application flow, alert scheduling, the full password-reset lifecycle
 (hashed single-use tokens, neutral enumeration response, replay rejection), unsubscribe
 confirmation, privacy deletion, search and API validation, API and credential rate
 limiting, error pages, security headers, sitemap escaping, normalization, matching,
-URL-safety guards, and the icon sprite staying in sync with the templates.
+URL-safety guards, placeholder application links, and the icon sprite staying in sync with the templates.
+AI regressions check provider failure handling, escaped output, caching, consistent
+shortlist/detail scores, and matching-backend parity without calling a live model.
 
 CI (`.github/workflows/ci.yml`) additionally asserts that production refuses an
 unsafe config, that the icon sprite and compiled CSS are reproducible, and that both
-Dockerfiles build.
+Dockerfiles build and Chromium can launch inside the worker image.
 
 ### Database migrations
 
